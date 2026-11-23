@@ -1,0 +1,38 @@
+products = [
+    {
+        "id": 1,
+        "name": "Wireless Headphones",
+        "description": "High-quality wireless headphones",
+        "price": 59.99,
+        "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600",
+        "category": "Electronics",
+        "stock": 15
+    },
+    {
+        "id": 2,
+        "name": "Smart Watch",
+        "description": "Modern smartwatch with fitness tracking",
+        "price": 89.99,
+        "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600",
+        "category": "Electronics",
+        "stock": 20
+    },
+    {
+        "id": 3,
+        "name": "Camera",
+        "description": "Digital camera for photography",
+        "price": 249.99,
+        "image": "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=600",
+        "category": "Electronics",
+        "stock": 8
+    },
+    {
+        "id": 4,
+        "name": "Running Shoes",
+        "description": "Comfortable running shoes",
+        "price": 74.99,
+        "image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600",
+        "category": "Fashion",
+        "stock": 12
+    }
+]

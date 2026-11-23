@@ -1,0 +1,19 @@
+{
+  "name": "mini-shop-frontend",
+  "version": "1.0.0",
+  "description": "Mini Shop frontend service",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "jest --runInBand"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "http-proxy-middleware": "^3.0.5"
+  },
+  "devDependencies": {
+    "jest": "^30.2.0",
+    "supertest": "^7.1.4",
+    "jest-environment-jsdom": "^30.2.0"
+  }
+}
