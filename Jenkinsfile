@@ -1,6 +1,28 @@
 pipeline {
-    agent any
+    agent {
+        label 'docker-python-node'
+    }
     stages {
+        stage('Verify Build Environment') {
+            steps {
+                sh '''
+                    echo "=== Python ==="
+                    python3 --version
+
+                    echo "=== Node.js ==="
+                    node --version
+
+                    echo "=== npm ==="
+                    npm --version
+
+                    echo "=== Docker ==="
+                    docker version
+
+                    echo "=== Git ==="
+                    git --version
+                '''
+            }
+        }
         stage('Install Dependencies') {
             parallel {
                     stage('Backend') {
