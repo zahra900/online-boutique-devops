@@ -66,8 +66,7 @@ pipeline {
                     }
                 }
             }
-        }
-        
+        }   
         stage('Run tests') {
             parallel {
                  stage('Backend') {
@@ -79,7 +78,9 @@ pipeline {
 
                  }
                  stage('frontend') {
-                    sh 'npm test -- --runInBand'
+                    steps {
+                        sh 'npm test -- --runInBand'
+                    }
                  }
                  stage('catalog') {
                      steps {
