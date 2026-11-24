@@ -93,7 +93,7 @@ pipeline {
             parallel {
                  stage('Backend') {
                     steps {
-                         dir('src/backend/tests') {
+                         dir('src/backend') {
                             sh '.venv/bin/python -m pytest -v'
                         }
                     }
@@ -101,12 +101,14 @@ pipeline {
                  }
                  stage('frontend') {
                     steps {
-                        sh 'npm test -- --runInBand'
+                        dir('src/frontend') {
+                          sh 'npm test -- --runInBand'
+                        }
                     }
                  }
                  stage('catalog') {
                      steps {
-                         dir('src/catalog/tests') {
+                         dir('src/catalog') {
                             sh '.venv/bin/python -m pytest'
                         }
                     }
@@ -146,7 +148,7 @@ pipeline {
         stage('Show Build Information') {
             steps {
                 sh '''
-                 echo "Build number $BULD_NUMBER"
+                 echo "Build number $BUILD_NUMBER"
                  echo "GIT commit SHA: $GIT_COMMIT"
                  echo "Job name: $JOB_NAME"
                  echo "Workspace: $WORKSPACE"
