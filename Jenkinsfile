@@ -6,9 +6,13 @@ pipeline {
             stage('Diagnose Docker Permissions') {
         steps {
             sh '''
-                echo "=== Jenkins node ==="
+                echo "=== NODE ==="
                 echo "NODE_NAME=$NODE_NAME"
                 hostname
+                id
+
+                echo "=== SOCKET ==="
+                stat -c "GID=%g Permissions=%a Inode=%i" /var/run/docker.sock
 
                 echo "=== Current user ==="
                 whoami
