@@ -8,16 +8,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-pip \
     nodejs \
     npm \
-    docker.io \
+    docker-cli \
     git \
     ca-certificates \
+    && command -v docker \
+    && docker --version \
     && rm -rf /var/lib/apt/lists/*
 
 
-RUN existing_gid=$(getent group docker | cut -d: -f3) \
-    && if [ "$existing_gid" != "112" ]; then \
-         groupmod -g 112 docker; \
-       fi \
+RUN if getent group docker >/dev/null; then \
+        groupmod -g 112 docker; \
+    else \
+        groupadd -g 112 docker; \
+    fi \
     && usermod -aG docker jenkins
 
 USER jenkins
