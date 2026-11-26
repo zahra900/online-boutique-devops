@@ -3,6 +3,26 @@ pipeline {
         label 'docker-python-node'
     }
     stages {
+            stage('Diagnose Docker Permissions') {
+        steps {
+            sh '''
+                echo "=== Jenkins node ==="
+                echo "NODE_NAME=$NODE_NAME"
+                hostname
+
+                echo "=== Current user ==="
+                whoami
+                id
+
+                echo "=== Docker socket ==="
+                ls -ln /var/run/docker.sock
+                stat -c "Owner=%u Group=%g Permissions=%a" /var/run/docker.sock
+
+                echo "=== Docker connection ==="
+                docker ps
+            '''
+        }
+    }
         stage('Verify Build Environment') {
             steps {
                 sh '''
