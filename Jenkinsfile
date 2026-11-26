@@ -11,8 +11,14 @@ pipeline {
                 hostname
                 id
 
-                echo "=== SOCKET ==="
-                stat -c "GID=%g Permissions=%a Inode=%i" /var/run/docker.sock
+                echo "=== CONTAINER IDENTITY ==="
+cat /etc/hostname
+cat /proc/self/cgroup
+readlink /proc/1/ns/mnt
+readlink /proc/self/ns/mnt
+
+echo "=== SOCKET ==="
+stat -c 'GID=%g Permissions=%a Inode=%i' /var/run/docker.sock
 
                 echo "=== Current user ==="
                 whoami
