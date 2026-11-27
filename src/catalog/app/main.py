@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+
 from app.products import products
 
 app = FastAPI(title="Mini Shop Catalog Service")
