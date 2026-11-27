@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="5" failures="0" errors="0" time="1.896">
+  <testsuite name="Frontend server functions" errors="0" failures="0" skipped="0" timestamp="2026-11-27T16:33:13" time="0.285" tests="5">
+    <testcase classname="Frontend server functions displayProducts fetches and displays products successfully" name="Frontend server functions displayProducts fetches and displays products successfully" time="0.037">
+    </testcase>
+    <testcase classname="Frontend server functions displayProducts displays an error message when the API returns an error" name="Frontend server functions displayProducts displays an error message when the API returns an error" time="0.004">
+    </testcase>
+    <testcase classname="Frontend server functions displayProducts displays an error message when fetch rejects" name="Frontend server functions displayProducts displays an error message when fetch rejects" time="0.005">
+    </testcase>
+    <testcase classname="Frontend server functions addToCart increments the cart count" name="Frontend server functions addToCart increments the cart count" time="0.004">
+    </testcase>
+    <testcase classname="Frontend server functions addToCart increments the cart count for multiple products" name="Frontend server functions addToCart increments the cart count for multiple products" time="0.003">
+    </testcase>
+  </testsuite>
+</testsuites>

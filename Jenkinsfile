@@ -2,40 +2,48 @@ pipeline {
     agent {
         label 'docker-python-node'
     }
-    stages {
-            stage('Diagnose Docker Permissions') {
-        steps {
-            sh '''
-                echo "=== NODE ==="
-                echo "NODE_NAME=$NODE_NAME"
-                hostname
-                id
 
-                echo "=== CONTAINER IDENTITY ==="
-cat /etc/hostname
-cat /proc/self/cgroup
-readlink /proc/1/ns/mnt
-readlink /proc/self/ns/mnt
-
-echo "=== SOCKET ==="
-stat -c 'GID=%g Permissions=%a Inode=%i' /var/run/docker.sock
-
-                echo "=== Current user ==="
-                whoami
-                id
-
-                echo "=== Docker socket ==="
-                ls -ln /var/run/docker.sock
-                stat -c "Owner=%u Group=%g Permissions=%a" /var/run/docker.sock
-
-                echo "=== Docker connection ==="
-                docker ps
-            '''
-        }
+    options {
+        timestamps()
+        timeout(time: 30, unit: 'MINUTES')
+        buildDiscarder(logRotator(
+            numToKeepStr: '20',
+            artifactNumToKeepStr: '10'
+        ))
+        skipDefaultCheckout(true)
     }
+
+    environment {
+        BACKEND_IMAGE = "mini-shop-backend"
+        CATALOG_IMAGE = "mini-shop-catalog"
+        FRONTEND_IMAGE = "mini-shop-frontend"
+        IMAGE_TAG = "${BUILD_NUMBER}-${GIT_COMMIT}"
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+
+                script {
+                    env.GIT_COMMIT = sh(
+                        script: 'git rev-parse --short HEAD',
+                        returnStdout: true
+                    ).trim()
+
+                    echo "Branch: ${env.BRANCH_NAME ?: 'unknown'}"
+                    echo "Commit: ${env.GIT_COMMIT}"
+                    echo "Build: ${env.BUILD_NUMBER}"
+                }
+            }
+        }
+
         stage('Verify Build Environment') {
             steps {
                 sh '''
+                    set -eu
+
                     echo "=== Python ==="
                     python3 --version
 
@@ -53,131 +61,201 @@ stat -c 'GID=%g Permissions=%a Inode=%i' /var/run/docker.sock
                 '''
             }
         }
+
         stage('Install Dependencies') {
             parallel {
-                    stage('Backend') {
-                        steps {
-                            dir('src/backend') {
-                                sh '''
-                                    python3 -m venv .venv
-                                    .venv/bin/pip install --upgrade pip
-                                    .venv/bin/pip install -r requirements-dev.txt
-                                    '''
-                            }
-                        }
-                    }
-                    stage('Frontend') {
-                        steps {
-                            dir('src/frontend') {
-                                sh 'npm ci'
-                            }
-                        }
-                    }
-                    stage('Catalog') {
-                        steps {
-                            dir('src/catalog') {
-                               sh '''
-                                python3 -m venv .venv
-                                .venv/bin/pip install --upgrade pip
-                                .venv/bin/pip install -r requirements-dev.txt
-                               '''
-                            }
-                        }
-                    }
-                }
-        }
-        stage('Code Quality') {
-            parallel {
-                stage('Backend') {
+
+                stage('Backend Dependencies') {
                     steps {
                         dir('src/backend') {
                             sh '''
-                                .venv/bin/black --check ./app
-                                .venv/bin/flake8 ./app
-                                .venv/bin/isort --check-only ./app
+                                set -eu
+                                python3 -m venv .venv
+                                .venv/bin/pip install --upgrade pip
+                                .venv/bin/pip install -r requirements-dev.txt
                             '''
                         }
                     }
                 }
-                stage('Catalog') {
+
+                stage('Catalog Dependencies') {
                     steps {
                         dir('src/catalog') {
-                             sh '''
-                                .venv/bin/black --check ./app
-                                .venv/bin/flake8 ./app
-                                .venv/bin/isort --check-only ./app
+                            sh '''
+                                set -eu
+                                python3 -m venv .venv
+                                .venv/bin/pip install --upgrade pip
+                                .venv/bin/pip install -r requirements-dev.txt
+                            '''
+                        }
+                    }
+                }
+
+                stage('Frontend Dependencies') {
+                    steps {
+                        dir('src/frontend') {
+                            sh 'npm ci'
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Code Quality') {
+            parallel {
+
+                stage('Backend Quality') {
+                    steps {
+                        dir('src/backend') {
+                            sh '''
+                                set -eu
+                                .venv/bin/black --check ./app ./tests
+                                .venv/bin/isort --check-only ./app ./tests
+                                .venv/bin/flake8 ./app ./tests
+                            '''
+                        }
+                    }
+                }
+
+                stage('Catalog Quality') {
+                    steps {
+                        dir('src/catalog') {
+                            sh '''
+                                set -eu
+                                .venv/bin/black --check ./app ./tests
+                                .venv/bin/isort --check-only ./app ./tests
+                                .venv/bin/flake8 ./app ./tests
                             '''
                         }
                     }
                 }
             }
-        }   
-        stage('Run tests') {
+        }
+
+        stage('Unit Tests') {
             parallel {
-                 stage('Backend') {
+
+                stage('Backend Tests') {
                     steps {
-                         dir('src/backend') {
-                            sh '.venv/bin/python -m pytest -v'
+                        dir('src/backend') {
+                            sh '''
+                                set -eu
+                                mkdir -p reports
+                                .venv/bin/python -m pytest -v \
+                                    --junitxml=reports/backend-results.xml
+                            '''
                         }
                     }
+                }
 
-                 }
-                 stage('frontend') {
+                stage('Catalog Tests') {
+                    steps {
+                        dir('src/catalog') {
+                            sh '''
+                                set -eu
+                                mkdir -p reports
+                                .venv/bin/python -m pytest -v \
+                                    --junitxml=reports/catalog-results.xml
+                            '''
+                        }
+                    }
+                }
+
+                stage('Frontend Tests') {
                     steps {
                         dir('src/frontend') {
-                          sh 'npm test -- --runInBand'
+                            sh '''
+                                set -eu
+                                npm test -- --ci \
+                                    --reporters=default \
+                                    --reporters=jest-junit
+                            '''
                         }
                     }
-                 }
-                 stage('catalog') {
-                     steps {
-                         dir('src/catalog') {
-                            sh '.venv/bin/python -m pytest'
-                        }
-                    }
-                 }
+                }
             }
         }
-        stage('Build Docker images') {
-           parallel {
-                stage('Backend') {
+
+        stage('Publish Test Results') {
+            steps {
+                junit allowEmptyResults: false,
+                    testResults: '''
+                        src/backend/reports/*.xml,
+                        src/catalog/reports/*.xml,
+                        src/frontend/junit.xml
+                    '''
+            }
+        }
+
+        stage('Build Docker Images') {
+            parallel {
+
+                stage('Backend Image') {
                     steps {
                         sh '''
-                            docker build -t mini-shop-backend:${BUILD_NUMBER} \
+                            set -eu
+                            docker build \
+                                -t ${BACKEND_IMAGE}:${IMAGE_TAG} \
+                                -t ${BACKEND_IMAGE}:${BUILD_NUMBER} \
                                 -f src/backend/Dockerfile src/backend
                         '''
                     }
                 }
 
-                stage('Frontend') {
+                stage('Catalog Image') {
                     steps {
                         sh '''
-                            docker build -t mini-shop-frontend:${BUILD_NUMBER} \
-                                -f src/frontend/Dockerfile src/frontend
+                            set -eu
+                            docker build \
+                                -t ${CATALOG_IMAGE}:${IMAGE_TAG} \
+                                -t ${CATALOG_IMAGE}:${BUILD_NUMBER} \
+                                -f src/catalog/Dockerfile src/catalog
                         '''
                     }
                 }
 
-                stage('Catalog') {
+                stage('Frontend Image') {
                     steps {
                         sh '''
-                            docker build -t mini-shop-catalog:${BUILD_NUMBER} \
-                                -f src/catalog/Dockerfile src/catalog
+                            set -eu
+                            docker build \
+                                -t ${FRONTEND_IMAGE}:${IMAGE_TAG} \
+                                -t ${FRONTEND_IMAGE}:${BUILD_NUMBER} \
+                                -f src/frontend/Dockerfile src/frontend
                         '''
                     }
                 }
             }
         }
-        stage('Show Build Information') {
+
+        stage('Verify Docker Images') {
             steps {
                 sh '''
-                 echo "Build number $BUILD_NUMBER"
-                 echo "GIT commit SHA: $GIT_COMMIT"
-                 echo "Job name: $JOB_NAME"
-                 echo "Workspace: $WORKSPACE"
-                 echo "Build URL: $BUILD_URL"
+                    set -eu
+
+                    docker image inspect ${BACKEND_IMAGE}:${IMAGE_TAG}
+                    docker image inspect ${CATALOG_IMAGE}:${IMAGE_TAG}
+                    docker image inspect ${FRONTEND_IMAGE}:${IMAGE_TAG}
+
+                    echo "All three Docker images were built successfully."
                 '''
             }
+        }
+    }
+
+    post {
+        always {
+            echo "Build ${BUILD_NUMBER} finished: ${currentBuild.currentResult}"
+            echo "Job: ${JOB_NAME}"
+            echo "Build URL: ${BUILD_URL}"
+        }
+
+        success {
+            echo "CI pipeline passed successfully."
+        }
+
+        failure {
+            echo "CI pipeline failed. Review the failed stage and test reports."
         }
     }
 }
