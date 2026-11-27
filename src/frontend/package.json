@@ -1,3 +1,4 @@
+
 {
   "name": "mini-shop-frontend",
   "version": "1.0.0",
@@ -6,6 +7,9 @@
   "scripts": {
     "start": "node server.js",
     "test": "jest --runInBand"
+  },
+  "jest": {
+    "testEnvironment": "jsdom"
   },
   "dependencies": {
     "express": "^5.1.0",

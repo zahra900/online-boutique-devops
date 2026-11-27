@@ -1,6 +1,10 @@
 
 let cartCount = 0;
 
+function resetCart() {
+    cartCount = 0;
+}
+
 async function displayProducts() {
     const productsContainer = document.getElementById("products");
 
@@ -48,6 +52,7 @@ if (typeof document !== "undefined") {
 if (typeof module !== "undefined" && module.exports) {
     module.exports = {
         displayProducts,
-        addToCart
+        addToCart,
+        resetCart
     };
 }
