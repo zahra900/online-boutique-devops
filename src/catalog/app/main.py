@@ -6,10 +6,7 @@ app = FastAPI(title="Mini Shop Catalog Service")
 
 @app.get("/health")
 async def health():
-    return {
-        "status": "healthy",
-        "service": "catalog"
-    }
+    return {"status": "healthy", "service": "catalog"}
 
 
 @app.get("/products")
@@ -19,15 +16,9 @@ async def get_products():
 
 @app.get("/products/{product_id}")
 async def get_product(product_id: int):
-    product = next(
-        (p for p in products if p["id"] == product_id),
-        None
-    )
+    product = next((p for p in products if p["id"] == product_id), None)
 
     if product is None:
-        raise HTTPException(
-            status_code=404,
-            detail="Product not found"
-        )
+        raise HTTPException(status_code=404, detail="Product not found")
 
     return product

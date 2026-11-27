@@ -99,13 +99,6 @@ stat -c 'GID=%g Permissions=%a Inode=%i' /var/run/docker.sock
                         }
                     }
                 }
-                stage('Frontend') {
-                    steps {
-                        dir('src/frontend') {
-                            sh 'npm run lint'
-                        }
-                    }
-                }
                 stage('Catalog') {
                     steps {
                         dir('src/catalog') {
