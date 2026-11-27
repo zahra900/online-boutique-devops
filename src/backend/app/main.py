@@ -1,6 +1,7 @@
-from fastapi import FastAPI, HTTPException
-import httpx
 import os
+
+import httpx
+from fastapi import FastAPI, HTTPException
 
 app = FastAPI(title="Mini Shop Backend")
 
@@ -16,12 +17,17 @@ async def health():
 async def get_products():
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
-            response = await client.get(f"{CATALOG_URL}/products")
-
+            response = await client.get(CATALOG_URL)
             response.raise_for_status()
             return response.json()
 
-    except httpx.HTTPError as exc:
+    except httpx.HTTPError:
         raise HTTPException(
-            status_code=502, detail="Catalog service unavailable"
-        ) from exc
+            status_code=503,
+            detail="Catalog service unavailable",
+        )
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail="Catalog service unavailable",
+        )
