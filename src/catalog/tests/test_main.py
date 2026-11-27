@@ -10,10 +10,7 @@ def test_health_endpoint():
     response = client.get("/health")
 
     assert response.status_code == 200
-    assert response.json() == {
-        "status": "healthy",
-        "service": "catalog"
-    }
+    assert response.json() == {"status": "healthy", "service": "catalog"}
 
 
 def test_get_all_products():
@@ -36,9 +33,7 @@ def test_get_non_existing_product():
     response = client.get("/products/999")
 
     assert response.status_code == 404
-    assert response.json() == {
-        "detail": "Product not found"
-    }
+    assert response.json() == {"detail": "Product not found"}
 
 
 def test_get_product_has_required_fields():
